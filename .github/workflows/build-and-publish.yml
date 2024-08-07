@@ -12,13 +12,15 @@ env:
   AWS_GHA_ROLE: arn:aws:iam::047408370407:role/GHActionsAdmin
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+  packages: write # This is required for publishing to Amazon ECR
+
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
