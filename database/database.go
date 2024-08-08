@@ -31,6 +31,7 @@ func CreateMongoClient() *mongo.Client {
     if err != nil {
         log.Fatalf("Error unmarshaling secrets: %v", err)
     }
+    fmt.Println("MONGO URI -> ", secrets.MongoConnectionString)
 
     MongoDbURI := secrets.MongoConnectionString
     client, err := mongo.NewClient(options.Client().ApplyURI(MongoDbURI))
