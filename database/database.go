@@ -2,11 +2,10 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
