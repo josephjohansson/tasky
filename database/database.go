@@ -3,33 +3,52 @@ package database
 import (
 	"context"
 	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
+type MongoSecrets struct {
+    MongoUser             string `json:"mongo_user"`
+    MongoPassword         string `json:"mongo_password"`
+    MongoConnectionString string `json:"mongo_connection_string"`
+}
 var Client *mongo.Client = CreateMongoClient()
 
-func CreateMongoClient() *mongo.Client {
-	godotenv.Overload()
-	MongoDbURI := os.Getenv("MONGODB_URI")
-	client, err := mongo.NewClient(options.Client().ApplyURI(MongoDbURI))
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	var ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer cancel()
-	fmt.Println("Connected to MONGO -> ", MongoDbURI)
-	return client
+func CreateMongoClient() *mongo.Client {
+    secretsFile := "/secrets/mongoSecrets"
+    secretsData, err := ioutil.ReadFile(secretsFile)
+    if err != nil {
+        log.Fatalf("Error reading secrets file: %v", err)
+    }
+
+    var secrets MongoSecrets
+    err = json.Unmarshal(secretsData, &secrets)
+    if err != nil {
+        log.Fatalf("Error unmarshaling secrets: %v", err)
+    }
+
+    MongoDbURI := secrets.MongoConnectionString
+    client, err := mongo.NewClient(options.Client().ApplyURI(MongoDbURI))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    err = client.Connect(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Println("Connected to MONGO -> ", MongoDbURI)
+    return client
 }
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
